@@ -94,6 +94,11 @@ namespace RSP_Core.Entities
                             Hand.Add(card);
                         }
                     }
+                    else
+                    {
+                        // No more cards available (deck and discard pile are empty)
+                        break;
+                    }
                 }
             }
         }
