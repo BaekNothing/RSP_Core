@@ -21,6 +21,16 @@ namespace RSP_Core.Effects
         /// </summary>
         public void RegisterEffect(string effectId, CardEffectDelegate handler)
         {
+            if (string.IsNullOrEmpty(effectId))
+            {
+                throw new ArgumentException("Effect ID cannot be null or empty", nameof(effectId));
+            }
+            
+            if (handler == null)
+            {
+                throw new ArgumentNullException(nameof(handler), "Effect handler cannot be null");
+            }
+            
             effects[effectId] = handler;
         }
 

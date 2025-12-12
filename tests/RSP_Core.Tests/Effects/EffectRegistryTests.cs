@@ -141,5 +141,38 @@ namespace RSP_Core.Tests.Effects
             Assert.False(success);
             Assert.Equal("EffectNotFound:unknown_effect", error);
         }
+
+        [Fact]
+        public void EffectRegistry_RegisterEffect_NullEffectId_ThrowsException()
+        {
+            // Arrange
+            var registry = new EffectRegistry();
+
+            // Act & Assert
+            Assert.Throws<ArgumentException>(() => 
+                registry.RegisterEffect(null, ctx => { }));
+        }
+
+        [Fact]
+        public void EffectRegistry_RegisterEffect_EmptyEffectId_ThrowsException()
+        {
+            // Arrange
+            var registry = new EffectRegistry();
+
+            // Act & Assert
+            Assert.Throws<ArgumentException>(() => 
+                registry.RegisterEffect("", ctx => { }));
+        }
+
+        [Fact]
+        public void EffectRegistry_RegisterEffect_NullHandler_ThrowsException()
+        {
+            // Arrange
+            var registry = new EffectRegistry();
+
+            // Act & Assert
+            Assert.Throws<ArgumentNullException>(() => 
+                registry.RegisterEffect("test_effect", null));
+        }
     }
 }
