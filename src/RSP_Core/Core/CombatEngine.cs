@@ -102,9 +102,6 @@ namespace RSP_Core.Core
             currentSnapshot.Player.Energy -= card.Definition.Cost;
             currentSnapshot.Player.Discard.Add(card);
 
-            // Reset defense for this resolution
-            currentSnapshot.Player.DefensePercent = 0;
-
             // Execute effects based on outcome
             var eventTags = new List<string>();
             int damageDealt = 0;
