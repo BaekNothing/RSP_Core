@@ -3,12 +3,8 @@ name: confluence-sync
 on:
   workflow_dispatch:
     inputs:
-      feature_key:
-        description: Feature key (e.g., FTR-0123)
-        required: true
-        type: string
-      confluence_page_id:
-        description: Confluence page ID
+      architecture_root_page_id:
+        description: Confluence root page or folder ID for Architecture (numeric ID or full URL)
         required: true
         type: string
 
@@ -24,8 +20,7 @@ jobs:
           CONFLUENCE_BASE_URL: ${{ secrets.CONFLUENCE_BASE_URL }}
           CONFLUENCE_USER_EMAIL: ${{ secrets.CONFLUENCE_USER_EMAIL }}
           CONFLUENCE_API_TOKEN: ${{ secrets.CONFLUENCE_API_TOKEN }}
-          FEATURE_KEY: ${{ inputs.feature_key }}
-          PAGE_ID: ${{ inputs.confluence_page_id }}
+          ARCH_ROOT_PAGE_ID: ${{ inputs.architecture_root_page_id }}
         shell: bash
         run: |
           set -euo pipefail
@@ -35,16 +30,14 @@ jobs:
             exit 1
           fi
 
-          if [ -z "$FEATURE_KEY" ] || [ -z "$PAGE_ID" ]; then
+          if [ -z "$ARCH_ROOT_PAGE_ID" ]; then
             echo "Missing required inputs." >&2
             exit 1
           fi
-
-          mkdir -p "SpecsMirror/$FEATURE_KEY"
 
           python .github/workflows/python/confluence_sync.py
 
       - name: Show mirrored files
         run: |
           set -euo pipefail
-          ls -la "SpecsMirror/${{ inputs.feature_key }}"
+          ls -la "SpecsMirror/Architecture"

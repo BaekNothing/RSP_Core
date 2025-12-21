@@ -1,6 +1,7 @@
 import base64
 import json
 import os
+import re
 import urllib.request
 from datetime import datetime, timezone
 from html.parser import HTMLParser
@@ -11,6 +12,11 @@ def get_env(name: str) -> str:
     if not value:
         raise SystemExit(f"Missing required environment variable: {name}")
     return value
+
+
+def sanitize_path_part(value: str) -> str:
+    cleaned = re.sub(r'[\\/:*?"<>|]', "-", value).strip()
+    return cleaned or "Untitled"
 
 
 class MinimalMarkdownParser(HTMLParser):
@@ -32,26 +38,24 @@ class MinimalMarkdownParser(HTMLParser):
         self.parts.append(data)
 
 
-def main() -> None:
-    base_url = get_env("CONFLUENCE_BASE_URL").rstrip("/")
-    user = get_env("CONFLUENCE_USER_EMAIL")
-    token = get_env("CONFLUENCE_API_TOKEN")
-    feature_key = get_env("FEATURE_KEY")
-    page_id = get_env("PAGE_ID")
-
-    url = f"{base_url}/rest/api/content/{page_id}?expand=body.storage,version,_links"
+def fetch_json(url: str, user: str, token: str) -> dict:
     req = urllib.request.Request(url)
     auth_bytes = f"{user}:{token}".encode("utf-8")
     req.add_header("Authorization", "Basic " + base64.b64encode(auth_bytes).decode("utf-8"))
     req.add_header("Accept", "application/json")
-
     with urllib.request.urlopen(req) as resp:
-        data = json.load(resp)
+        return json.load(resp)
 
-    storage_html = data.get("body", {}).get("storage", {}).get("value", "")
-    page_title = data.get("title", "Untitled")
-    version_number = data.get("version", {}).get("number")
-    links = data.get("_links", {})
+
+def write_spec_and_meta(
+    output_dir: str,
+    content: dict,
+    base_url: str,
+) -> None:
+    storage_html = content.get("body", {}).get("storage", {}).get("value", "")
+    page_title = content.get("title", "Untitled")
+    version_number = content.get("version", {}).get("number")
+    links = content.get("_links", {})
     webui = links.get("webui")
     canonical_url = f"{base_url}{webui}" if webui else None
 
@@ -59,8 +63,8 @@ def main() -> None:
     parser.feed(storage_html)
     text = "".join(parser.parts).strip()
 
-    spec_path = os.path.join("SpecsMirror", feature_key, "spec.md")
-    meta_path = os.path.join("SpecsMirror", feature_key, "meta.json")
+    spec_path = os.path.join(output_dir, "spec.md")
+    meta_path = os.path.join(output_dir, "meta.json")
 
     with open(spec_path, "w", encoding="utf-8") as f:
         f.write(f"# {page_title}\n\n")
@@ -69,7 +73,7 @@ def main() -> None:
         f.write(text + "\n")
 
     meta = {
-        "page_id": page_id,
+        "page_id": content.get("id"),
         "fetched_at_utc": datetime.now(timezone.utc)
         .isoformat()
         .replace("+00:00", "Z"),
@@ -81,6 +85,75 @@ def main() -> None:
     with open(meta_path, "w", encoding="utf-8") as f:
         json.dump(meta, f, indent=2)
         f.write("\n")
+
+
+def iter_child_page_ids(base_url: str, user: str, token: str, root_page_id: str) -> list[str]:
+    page_ids: list[str] = []
+    start = 0
+    limit = 50
+    while True:
+        url = (
+            f"{base_url}/rest/api/content/{root_page_id}/child/page"
+            f"?limit={limit}&start={start}"
+        )
+        data = fetch_json(url, user, token)
+        results = data.get("results", [])
+        page_ids.extend([item["id"] for item in results if "id" in item])
+        if data.get("size", 0) + start >= data.get("totalSize", 0):
+            break
+        start += limit
+    return page_ids
+
+
+def normalize_root_page_id(raw_value: str) -> str:
+    if raw_value.isdigit():
+        return raw_value
+    match = re.search(r"(\d+)", raw_value)
+    if match:
+        return match.group(1)
+    raise SystemExit(
+        "ARCH_ROOT_PAGE_ID must be a numeric Confluence page or folder ID (e.g., 86737290) "
+        "or a URL containing the ID."
+    )
+
+
+def mirror_architecture(base_url: str, user: str, token: str, root_page_id: str) -> None:
+    base_dir = os.path.join("SpecsMirror", "Architecture")
+    os.makedirs(base_dir, exist_ok=True)
+
+    page_ids = iter_child_page_ids(base_url, user, token, root_page_id)
+    for page_id in page_ids:
+        url = (
+            f"{base_url}/rest/api/content/{page_id}"
+            "?expand=body.storage,version,_links,ancestors"
+        )
+        content = fetch_json(url, user, token)
+        ancestors = content.get("ancestors", [])
+        path_parts: list[str] = []
+        root_index = None
+        for idx, ancestor in enumerate(ancestors):
+            if ancestor.get("id") == root_page_id:
+                root_index = idx
+                break
+        if root_index is not None:
+            for ancestor in ancestors[root_index + 1 :]:
+                title = ancestor.get("title", "Untitled")
+                path_parts.append(sanitize_path_part(title))
+        title = content.get("title", "Untitled")
+        path_parts.append(sanitize_path_part(title))
+
+        output_dir = os.path.join(base_dir, *path_parts)
+        os.makedirs(output_dir, exist_ok=True)
+        write_spec_and_meta(output_dir, content, base_url)
+
+
+def main() -> None:
+    base_url = get_env("CONFLUENCE_BASE_URL").rstrip("/")
+    user = get_env("CONFLUENCE_USER_EMAIL")
+    token = get_env("CONFLUENCE_API_TOKEN")
+    root_page_id = normalize_root_page_id(get_env("ARCH_ROOT_PAGE_ID"))
+
+    mirror_architecture(base_url, user, token, root_page_id)
 
 
 if __name__ == "__main__":
