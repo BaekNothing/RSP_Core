@@ -19,13 +19,13 @@ namespace RSP_Core.Systems
             {
                 case SymbolType.Square:
                     return enemy == SymbolType.Triangle ? CombatOutcome.Win : CombatOutcome.Lose;
-                
+
                 case SymbolType.Triangle:
                     return enemy == SymbolType.Circle ? CombatOutcome.Win : CombatOutcome.Lose;
-                
+
                 case SymbolType.Circle:
                     return enemy == SymbolType.Square ? CombatOutcome.Win : CombatOutcome.Lose;
-                
+
                 default:
                     return CombatOutcome.Draw;
             }

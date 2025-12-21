@@ -31,9 +31,9 @@ namespace CoreCombat.ConsoleRunner
                 int cardsPlayed = 0;
                 while (snapshot.SlotIndex < snapshot.MaxSlotsPerTurn && snapshot.Player.Hand.Count > 0)
                 {
-                    var card = snapshot.Player.Hand.FirstOrDefault(c => 
+                    var card = snapshot.Player.Hand.FirstOrDefault(c =>
                         c.Definition.Cost <= snapshot.Player.Energy);
-                    
+
                     if (card == null)
                     {
                         Console.WriteLine("No playable cards remaining (insufficient energy)");
@@ -49,7 +49,7 @@ namespace CoreCombat.ConsoleRunner
                     Console.WriteLine($"Enemy plays: {result.EnemySymbol}");
                     Console.WriteLine($"Result: {result.Outcome}!");
                     Console.WriteLine($"Damage dealt: {result.DamageDealt} | Damage taken: {result.DamageTaken}");
-                    
+
                     if (result.EventTags.Count > 0)
                     {
                         Console.WriteLine($"Events: {string.Join(", ", result.EventTags)}");
@@ -109,8 +109,8 @@ namespace CoreCombat.ConsoleRunner
             initData.InitialPlayerState.MaxEnergy = 10;
 
             // Create diverse card set
-            AddPlayerCard(initData, "Strike", SymbolType.Square, CardRole.Attack, 2, 12, 
-                new[] { ("attack_damage", 12) }, 
+            AddPlayerCard(initData, "Strike", SymbolType.Square, CardRole.Attack, 2, 12,
+                new[] { ("attack_damage", 12) },
                 new[] { ("attack_bonus_damage", 6) });
 
             AddPlayerCard(initData, "Pierce", SymbolType.Triangle, CardRole.Attack, 2, 10,
@@ -160,9 +160,9 @@ namespace CoreCombat.ConsoleRunner
             return initData;
         }
 
-        static void AddPlayerCard(BattleInitData initData, string name, SymbolType symbol, 
-            CardRole role, int cost, int baseValue, 
-            (string effectId, int value)[] baseEffects, 
+        static void AddPlayerCard(BattleInitData initData, string name, SymbolType symbol,
+            CardRole role, int cost, int baseValue,
+            (string effectId, int value)[] baseEffects,
             (string effectId, int value)[] winEffects)
         {
             var cardDef = new CardDefinition

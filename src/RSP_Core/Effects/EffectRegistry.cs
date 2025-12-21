@@ -25,12 +25,12 @@ namespace RSP_Core.Effects
             {
                 throw new ArgumentException("Effect ID cannot be null or empty", nameof(effectId));
             }
-            
+
             if (handler == null)
             {
                 throw new ArgumentNullException(nameof(handler), "Effect handler cannot be null");
             }
-            
+
             effects[effectId] = handler;
         }
 
@@ -44,7 +44,7 @@ namespace RSP_Core.Effects
                 try
                 {
                     handler(context);
-                    errorTag = null;
+                    errorTag = string.Empty;
                     return true;
                 }
                 catch (Exception ex)
@@ -80,7 +80,7 @@ namespace RSP_Core.Effects
             RegisterEffect("defense_percent", ctx =>
             {
                 ctx.Snapshot.Player.DefensePercent += ctx.Value;
-                if (ctx.Snapshot.Player.DefensePercent > 100) 
+                if (ctx.Snapshot.Player.DefensePercent > 100)
                     ctx.Snapshot.Player.DefensePercent = 100;
             });
 

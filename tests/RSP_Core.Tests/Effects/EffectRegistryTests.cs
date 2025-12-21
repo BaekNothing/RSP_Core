@@ -23,7 +23,7 @@ namespace RSP_Core.Tests.Effects
 
             // Assert
             Assert.True(success);
-            Assert.Null(error);
+            Assert.True(string.IsNullOrEmpty(error));
             Assert.Equal(85, snapshot.Enemy.HP);
         }
 
@@ -44,7 +44,7 @@ namespace RSP_Core.Tests.Effects
 
             // Assert
             Assert.True(success);
-            Assert.Null(error);
+            Assert.True(string.IsNullOrEmpty(error));
             Assert.Equal(30, snapshot.Player.DefensePercent);
         }
 
@@ -69,7 +69,7 @@ namespace RSP_Core.Tests.Effects
 
             // Assert
             Assert.True(success);
-            Assert.Null(error);
+            Assert.True(string.IsNullOrEmpty(error));
             Assert.Equal(2, snapshot.Player.Hand.Count);
             Assert.Single(snapshot.Player.Deck);
         }
@@ -91,7 +91,7 @@ namespace RSP_Core.Tests.Effects
 
             // Assert
             Assert.True(success);
-            Assert.Null(error);
+            Assert.True(string.IsNullOrEmpty(error));
             Assert.True(snapshot.Enemy.StatusEffects.ContainsKey("bleed"));
             Assert.Equal(3, snapshot.Enemy.StatusEffects["bleed"]);
         }
@@ -149,8 +149,8 @@ namespace RSP_Core.Tests.Effects
             var registry = new EffectRegistry();
 
             // Act & Assert
-            Assert.Throws<ArgumentException>(() => 
-                registry.RegisterEffect(null, ctx => { }));
+            Assert.Throws<ArgumentException>(() =>
+                registry.RegisterEffect(null!, ctx => { }));
         }
 
         [Fact]
@@ -160,7 +160,7 @@ namespace RSP_Core.Tests.Effects
             var registry = new EffectRegistry();
 
             // Act & Assert
-            Assert.Throws<ArgumentException>(() => 
+            Assert.Throws<ArgumentException>(() =>
                 registry.RegisterEffect("", ctx => { }));
         }
 
@@ -171,8 +171,8 @@ namespace RSP_Core.Tests.Effects
             var registry = new EffectRegistry();
 
             // Act & Assert
-            Assert.Throws<ArgumentNullException>(() => 
-                registry.RegisterEffect("test_effect", null));
+            Assert.Throws<ArgumentNullException>(() =>
+                registry.RegisterEffect("test_effect", null!));
         }
     }
 }

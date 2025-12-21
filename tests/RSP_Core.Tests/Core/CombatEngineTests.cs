@@ -81,7 +81,7 @@ namespace RSP_Core.Tests.Core
             // Arrange
             var engine = new CombatEngine(new DefaultRandomSource(42));
             var initData = CreateTestInitData();
-            
+
             // Force matchup: Square vs Triangle = Win
             var playerCard = new CardInstance("test", new CardDefinition
             {
@@ -119,7 +119,7 @@ namespace RSP_Core.Tests.Core
             // Arrange
             var engine = new CombatEngine(new DefaultRandomSource(42));
             var initData = CreateTestInitData();
-            
+
             // Force matchup: Square vs Square = Draw
             var playerCard = new CardInstance("test", new CardDefinition
             {
@@ -158,7 +158,7 @@ namespace RSP_Core.Tests.Core
             // Arrange
             var engine = new CombatEngine(new DefaultRandomSource(42));
             var initData = CreateTestInitData();
-            
+
             // Force matchup: Square vs Circle = Lose
             var playerCard = new CardInstance("test", new CardDefinition
             {
@@ -245,7 +245,7 @@ namespace RSP_Core.Tests.Core
             // Arrange
             var engine = new CombatEngine(new DefaultRandomSource(42));
             var initData = CreateTestInitData();
-            
+
             // Only add 2 enemy cards
             initData.InitialEnemyState.Deck.Clear();
             initData.InitialEnemyState.Deck.Add(new EnemyCard("e1", SymbolType.Square, 5));
@@ -256,13 +256,13 @@ namespace RSP_Core.Tests.Core
             // Play 2 cards to exhaust enemy deck
             var snapshot = engine.GetSnapshot();
             engine.ResolveCard(new ResolveRequest(snapshot.Player.Hand[0].InstanceId, 0));
-            
+
             snapshot = engine.GetSnapshot();
             engine.ResolveCard(new ResolveRequest(snapshot.Player.Hand[0].InstanceId, 1));
 
             // Now enemy deck should be empty and discard should have 2 cards
             snapshot = engine.GetSnapshot();
-            Assert.Equal(0, snapshot.Enemy.Deck.Count);
+            Assert.Empty(snapshot.Enemy.Deck);
             Assert.Equal(2, snapshot.Enemy.Discard.Count);
 
             // Act - play another card, should trigger refill
@@ -270,7 +270,8 @@ namespace RSP_Core.Tests.Core
             var result = engine.ResolveCard(new ResolveRequest(snapshot.Player.Hand[0].InstanceId, 2));
 
             // Assert - deck should have been refilled from discard
-            Assert.True(result.Snapshot.Enemy.Deck.Count >= 0); // Refilled and one drawn
+            Assert.Single(result.Snapshot.Enemy.Deck);
+            Assert.Single(result.Snapshot.Enemy.Discard);
         }
 
         [Fact]
@@ -279,7 +280,7 @@ namespace RSP_Core.Tests.Core
             // Arrange
             var engine = new CombatEngine(new DefaultRandomSource(42));
             var initData = CreateTestInitData();
-            
+
             // Create defense card
             var playerCard = new CardInstance("test", new CardDefinition
             {

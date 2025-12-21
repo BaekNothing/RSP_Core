@@ -12,12 +12,12 @@ namespace RSP_Core.Core
     /// </summary>
     public class CombatEngine : ICombatEngine
     {
-        private BattleSnapshot currentSnapshot;
+        private BattleSnapshot currentSnapshot = null!;
         private readonly IRandomSource randomSource;
         private readonly EffectRegistry effectRegistry;
         private bool isInitialized;
 
-        public CombatEngine(IRandomSource randomSource = null, EffectRegistry effectRegistry = null)
+        public CombatEngine(IRandomSource? randomSource = null, EffectRegistry? effectRegistry = null)
         {
             this.randomSource = randomSource ?? new DefaultRandomSource();
             this.effectRegistry = effectRegistry ?? new EffectRegistry();
@@ -81,7 +81,7 @@ namespace RSP_Core.Core
                 RefillEnemyDeck();
             }
 
-            EnemyCard enemyCard = null;
+            EnemyCard? enemyCard = null;
             if (currentSnapshot.Enemy.Deck.Count > 0)
             {
                 enemyCard = currentSnapshot.Enemy.Deck[0];
@@ -116,10 +116,10 @@ namespace RSP_Core.Core
             {
                 // Execute base effects
                 damageDealt += ExecuteEffects(card.Definition.BaseEffects, effectContext, eventTags);
-                
+
                 // Execute win effects
                 damageDealt += ExecuteEffects(card.Definition.WinEffects, effectContext, eventTags);
-                
+
                 // Enemy attack is negated
                 eventTags.Add("EnemyNegated");
             }
@@ -127,7 +127,7 @@ namespace RSP_Core.Core
             {
                 // Execute base effects
                 damageDealt += ExecuteEffects(card.Definition.BaseEffects, effectContext, eventTags);
-                
+
                 // Enemy attacks
                 damageTaken = ApplyEnemyAttack(enemyAttack);
                 eventTags.Add("EnemyAttacked");
@@ -136,7 +136,7 @@ namespace RSP_Core.Core
             {
                 // Player effects do NOT execute
                 eventTags.Add("PlayerEffectsNegated");
-                
+
                 // Enemy attacks
                 damageTaken = ApplyEnemyAttack(enemyAttack);
                 eventTags.Add("EnemyAttacked");
