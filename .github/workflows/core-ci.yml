@@ -15,19 +15,16 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+
           if [ -f global.json ]; then
-            version=$(python - <<'PY'
-import json
-with open('global.json', 'r', encoding='utf-8') as f:
-    data = json.load(f)
-print(data.get('sdk', {}).get('version', ''))
-PY
-)
-            if [ -z "$version" ]; then
+            version="$(python -c "import json; d=json.load(open('global.json','r',encoding='utf-8')); print(d.get('sdk',{}).get('version',''))")"
+
+            if [ -z "${version}" ]; then
               echo "global.json found but sdk.version missing" >&2
               exit 1
             fi
-            echo "version=$version" >> "$GITHUB_OUTPUT"
+
+            echo "version=${version}" >> "$GITHUB_OUTPUT"
           else
             echo "version=8.0.x" >> "$GITHUB_OUTPUT"
           fi
