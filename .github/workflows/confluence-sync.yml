@@ -46,7 +46,7 @@ jobs:
 
       - name: Commit and push mirrored files
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.REPO_PR_TOKEN }}
         run: |
           set -euo pipefail
           if [ -n "$(git status --porcelain)" ]; then
