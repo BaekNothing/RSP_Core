@@ -1,0 +1,73 @@
+name: core-ci
+
+on:
+  pull_request:
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Detect .NET SDK version
+        id: dotnet-version
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -f global.json ]; then
+            version=$(jq -r '.sdk.version // empty' global.json)
+            if [ -z "$version" ]; then
+              echo "global.json found but sdk.version missing" >&2
+              exit 1
+            fi
+            echo "version=$version" >> "$GITHUB_OUTPUT"
+          else
+            echo "version=8.0.x" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ steps.dotnet-version.outputs.version }}
+
+      - name: Detect solution or project
+        id: target
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          sln_files=( *.sln )
+          if [ ${#sln_files[@]} -gt 0 ]; then
+            echo "path=${sln_files[0]}" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          mapfile -t csproj_files < <(find src -type f -name '*.csproj')
+          if [ ${#csproj_files[@]} -eq 1 ]; then
+            echo "path=${csproj_files[0]}" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "No solution found and expected exactly one csproj under src/." >&2
+          echo "Found ${#csproj_files[@]} csproj files." >&2
+          exit 1
+
+      - name: Restore
+        run: dotnet restore "${{ steps.target.outputs.path }}"
+
+      - name: Build
+        run: dotnet build "${{ steps.target.outputs.path }}" --configuration Release -p:EnableNETAnalyzers=true
+
+      - name: Test
+        run: dotnet test "${{ steps.target.outputs.path }}" --configuration Release --no-build
+
+      - name: Verify formatting (optional)
+        shell: bash
+        run: |
+          set -euo pipefail
+          if dotnet format --version >/dev/null 2>&1; then
+            dotnet format "${{ steps.target.outputs.path }}" --verify-no-changes
+          else
+            echo "dotnet format not available; skipping."
+          fi
