@@ -116,10 +116,10 @@ namespace RSP_Core.Core
             {
                 // Execute base effects
                 damageDealt += ExecuteEffects(card.Definition.BaseEffects, effectContext, eventTags);
-                
+
                 // Execute win effects
                 damageDealt += ExecuteEffects(card.Definition.WinEffects, effectContext, eventTags);
-                
+
                 // Enemy attack is negated
                 eventTags.Add("EnemyNegated");
             }
@@ -127,7 +127,7 @@ namespace RSP_Core.Core
             {
                 // Execute base effects
                 damageDealt += ExecuteEffects(card.Definition.BaseEffects, effectContext, eventTags);
-                
+
                 // Enemy attacks
                 damageTaken = ApplyEnemyAttack(enemyAttack);
                 eventTags.Add("EnemyAttacked");
@@ -136,7 +136,7 @@ namespace RSP_Core.Core
             {
                 // Player effects do NOT execute
                 eventTags.Add("PlayerEffectsNegated");
-                
+
                 // Enemy attacks
                 damageTaken = ApplyEnemyAttack(enemyAttack);
                 eventTags.Add("EnemyAttacked");

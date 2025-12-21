@@ -149,7 +149,7 @@ namespace RSP_Core.Tests.Effects
             var registry = new EffectRegistry();
 
             // Act & Assert
-            Assert.Throws<ArgumentException>(() => 
+            Assert.Throws<ArgumentException>(() =>
                 registry.RegisterEffect(null, ctx => { }));
         }
 
@@ -160,7 +160,7 @@ namespace RSP_Core.Tests.Effects
             var registry = new EffectRegistry();
 
             // Act & Assert
-            Assert.Throws<ArgumentException>(() => 
+            Assert.Throws<ArgumentException>(() =>
                 registry.RegisterEffect("", ctx => { }));
         }
 
@@ -171,7 +171,7 @@ namespace RSP_Core.Tests.Effects
             var registry = new EffectRegistry();
 
             // Act & Assert
-            Assert.Throws<ArgumentNullException>(() => 
+            Assert.Throws<ArgumentNullException>(() =>
                 registry.RegisterEffect("test_effect", null));
         }
     }

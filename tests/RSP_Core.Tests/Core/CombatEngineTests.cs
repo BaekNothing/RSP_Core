@@ -81,7 +81,7 @@ namespace RSP_Core.Tests.Core
             // Arrange
             var engine = new CombatEngine(new DefaultRandomSource(42));
             var initData = CreateTestInitData();
-            
+
             // Force matchup: Square vs Triangle = Win
             var playerCard = new CardInstance("test", new CardDefinition
             {
@@ -119,7 +119,7 @@ namespace RSP_Core.Tests.Core
             // Arrange
             var engine = new CombatEngine(new DefaultRandomSource(42));
             var initData = CreateTestInitData();
-            
+
             // Force matchup: Square vs Square = Draw
             var playerCard = new CardInstance("test", new CardDefinition
             {
@@ -158,7 +158,7 @@ namespace RSP_Core.Tests.Core
             // Arrange
             var engine = new CombatEngine(new DefaultRandomSource(42));
             var initData = CreateTestInitData();
-            
+
             // Force matchup: Square vs Circle = Lose
             var playerCard = new CardInstance("test", new CardDefinition
             {
@@ -245,7 +245,7 @@ namespace RSP_Core.Tests.Core
             // Arrange
             var engine = new CombatEngine(new DefaultRandomSource(42));
             var initData = CreateTestInitData();
-            
+
             // Only add 2 enemy cards
             initData.InitialEnemyState.Deck.Clear();
             initData.InitialEnemyState.Deck.Add(new EnemyCard("e1", SymbolType.Square, 5));
@@ -256,7 +256,7 @@ namespace RSP_Core.Tests.Core
             // Play 2 cards to exhaust enemy deck
             var snapshot = engine.GetSnapshot();
             engine.ResolveCard(new ResolveRequest(snapshot.Player.Hand[0].InstanceId, 0));
-            
+
             snapshot = engine.GetSnapshot();
             engine.ResolveCard(new ResolveRequest(snapshot.Player.Hand[0].InstanceId, 1));
 
@@ -279,7 +279,7 @@ namespace RSP_Core.Tests.Core
             // Arrange
             var engine = new CombatEngine(new DefaultRandomSource(42));
             var initData = CreateTestInitData();
-            
+
             // Create defense card
             var playerCard = new CardInstance("test", new CardDefinition
             {
