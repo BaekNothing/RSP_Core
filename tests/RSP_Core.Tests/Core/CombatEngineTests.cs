@@ -270,7 +270,8 @@ namespace RSP_Core.Tests.Core
             var result = engine.ResolveCard(new ResolveRequest(snapshot.Player.Hand[0].InstanceId, 2));
 
             // Assert - deck should have been refilled from discard
-            Assert.True(result.Snapshot.Enemy.Deck.Count >= 0); // Refilled and one drawn
+            Assert.Single(result.Snapshot.Enemy.Deck);
+            Assert.Single(result.Snapshot.Enemy.Discard);
         }
 
         [Fact]
