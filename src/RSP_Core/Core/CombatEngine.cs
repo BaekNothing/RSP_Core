@@ -13,7 +13,7 @@ namespace RSP_Core.Core
     public class CombatEngine : ICombatEngine
     {
         private BattleSnapshot currentSnapshot = null!;
-        private readonly IRandomSource randomSource;
+        private IRandomSource randomSource;
         private readonly EffectRegistry effectRegistry;
         private bool isInitialized;
 
@@ -26,13 +26,16 @@ namespace RSP_Core.Core
 
         public void Initialize(BattleInitData initData)
         {
+            if (initData.Seed.HasValue && randomSource is DefaultRandomSource)
+            {
+                randomSource = new DefaultRandomSource(initData.Seed.Value);
+            }
+
             currentSnapshot = new BattleSnapshot
             {
-                Player = ClonePlayerState(initData.InitialPlayerState),
-                Enemy = CloneEnemyState(initData.InitialEnemyState),
-                TurnNumber = 1,
-                SlotIndex = 0,
-                MaxSlotsPerTurn = initData.MaxSlotsPerTurn
+                Player = ClonePlayerState(initData.PlayerState),
+                Enemy = CloneEnemyState(initData.EnemyState),
+                TurnNumber = 1
             };
 
             // Shuffle decks
@@ -89,11 +92,11 @@ namespace RSP_Core.Core
                 currentSnapshot.Enemy.Discard.Add(enemyCard);
             }
 
-            SymbolType enemySymbol = enemyCard?.SymbolType ?? SymbolType.Square;
-            int enemyAttack = enemyCard?.AttackValue ?? currentSnapshot.Enemy.AttackValue;
+            SymbolType enemySymbol = enemyCard?.Symbol ?? SymbolType.Square;
+            int enemyAttack = enemyCard?.Power ?? currentSnapshot.Enemy.AttackValue;
 
             // Determine outcome
-            result.PlayerSymbol = card.Definition.SymbolType;
+            result.PlayerSymbol = card.Definition.Symbol;
             result.EnemySymbol = enemySymbol;
             result.Outcome = SymbolMatchup.DetermineOutcome(result.PlayerSymbol, result.EnemySymbol);
 
@@ -142,13 +145,10 @@ namespace RSP_Core.Core
                 eventTags.Add("EnemyAttacked");
             }
 
-            result.DamageDealt = damageDealt;
-            result.DamageTaken = damageTaken;
+            result.DamageDealtToEnemy = damageDealt;
+            result.DamageDealtToPlayer = damageTaken;
             result.EventTags = eventTags;
             result.Snapshot = CloneSnapshot(currentSnapshot);
-
-            // Advance slot
-            currentSnapshot.SlotIndex++;
 
             return result;
         }
@@ -171,7 +171,6 @@ namespace RSP_Core.Core
 
             // Advance turn
             currentSnapshot.TurnNumber++;
-            currentSnapshot.SlotIndex = 0;
 
             result.EventTags.Add("TurnStart");
             result.Snapshot = CloneSnapshot(currentSnapshot);
@@ -193,7 +192,7 @@ namespace RSP_Core.Core
 
             foreach (var effectRef in effects)
             {
-                int oldEnemyHP = context.Snapshot.Enemy.HP;
+                int oldEnemyHP = context.Snapshot.Enemy.Hp;
 
                 context.Value = effectRef.ValueOverride ?? context.SourceCard.Definition.BaseValue;
                 context.Formula = effectRef.Formula ?? string.Empty;
@@ -204,7 +203,7 @@ namespace RSP_Core.Core
                 }
 
                 // Track damage dealt
-                int newEnemyHP = context.Snapshot.Enemy.HP;
+                int newEnemyHP = context.Snapshot.Enemy.Hp;
                 if (newEnemyHP < oldEnemyHP)
                 {
                     totalDamage += (oldEnemyHP - newEnemyHP);
@@ -220,8 +219,8 @@ namespace RSP_Core.Core
             int actualDamage = attack * (100 - defensePercent) / 100;
             if (actualDamage < 0) actualDamage = 0;
 
-            currentSnapshot.Player.HP -= actualDamage;
-            if (currentSnapshot.Player.HP < 0) currentSnapshot.Player.HP = 0;
+            currentSnapshot.Player.Hp -= actualDamage;
+            if (currentSnapshot.Player.Hp < 0) currentSnapshot.Player.Hp = 0;
 
             return actualDamage;
         }
@@ -291,13 +290,16 @@ namespace RSP_Core.Core
 
         private BattleSnapshot CloneSnapshot(BattleSnapshot source)
         {
+            bool isPlayerDead = source.Player.Hp <= 0;
+            bool isEnemyDead = source.Enemy.Hp <= 0;
             return new BattleSnapshot
             {
                 Player = ClonePlayerState(source.Player),
                 Enemy = CloneEnemyState(source.Enemy),
                 TurnNumber = source.TurnNumber,
-                SlotIndex = source.SlotIndex,
-                MaxSlotsPerTurn = source.MaxSlotsPerTurn
+                IsBattleEnded = isPlayerDead || isEnemyDead,
+                IsEnemyDead = isEnemyDead,
+                IsPlayerDead = isPlayerDead
             };
         }
 
@@ -305,8 +307,8 @@ namespace RSP_Core.Core
         {
             return new PlayerState
             {
-                HP = source.HP,
-                MaxHP = source.MaxHP,
+                Hp = source.Hp,
+                MaxHp = source.MaxHp,
                 Energy = source.Energy,
                 MaxEnergy = source.MaxEnergy,
                 DefensePercent = source.DefensePercent,
@@ -321,10 +323,12 @@ namespace RSP_Core.Core
         {
             return new EnemyState
             {
-                HP = source.HP,
-                MaxHP = source.MaxHP,
+                Id = source.Id,
+                Name = source.Name,
+                Hp = source.Hp,
+                MaxHp = source.MaxHp,
                 AttackValue = source.AttackValue,
-                LastSymbol = source.LastSymbol,
+                LastUsedSymbol = source.LastUsedSymbol,
                 Deck = new List<EnemyCard>(source.Deck),
                 Discard = new List<EnemyCard>(source.Discard),
                 StatusEffects = new Dictionary<string, int>(source.StatusEffects)

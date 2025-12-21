@@ -8,8 +8,9 @@ namespace RSP_Core.Models
         public PlayerState Player { get; set; }
         public EnemyState Enemy { get; set; }
         public int TurnNumber { get; set; }
-        public int SlotIndex { get; set; }
-        public int MaxSlotsPerTurn { get; set; }
+        public bool IsBattleEnded { get; set; }
+        public bool IsPlayerDead { get; set; }
+        public bool IsEnemyDead { get; set; }
 
         public BattleSnapshot()
         {

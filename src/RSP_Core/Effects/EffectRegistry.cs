@@ -54,7 +54,7 @@ namespace RSP_Core.Effects
                 }
             }
 
-            errorTag = $"EffectNotFound:{effectId}";
+            errorTag = $"MissingEffect:{effectId}";
             return false;
         }
 
@@ -64,16 +64,16 @@ namespace RSP_Core.Effects
             RegisterEffect("attack_damage", ctx =>
             {
                 int damage = ctx.Value;
-                ctx.Snapshot.Enemy.HP -= damage;
-                if (ctx.Snapshot.Enemy.HP < 0) ctx.Snapshot.Enemy.HP = 0;
+                ctx.Snapshot.Enemy.Hp -= damage;
+                if (ctx.Snapshot.Enemy.Hp < 0) ctx.Snapshot.Enemy.Hp = 0;
             });
 
             // Attack bonus damage (for win effects)
             RegisterEffect("attack_bonus_damage", ctx =>
             {
                 int damage = ctx.Value;
-                ctx.Snapshot.Enemy.HP -= damage;
-                if (ctx.Snapshot.Enemy.HP < 0) ctx.Snapshot.Enemy.HP = 0;
+                ctx.Snapshot.Enemy.Hp -= damage;
+                if (ctx.Snapshot.Enemy.Hp < 0) ctx.Snapshot.Enemy.Hp = 0;
             });
 
             // Defense percent (damage reduction for this turn)

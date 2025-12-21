@@ -7,8 +7,8 @@ namespace RSP_Core.Models
     /// </summary>
     public class PlayerState
     {
-        public int HP { get; set; }
-        public int MaxHP { get; set; }
+        public int Hp { get; set; }
+        public int MaxHp { get; set; }
         public int Energy { get; set; }
         public int MaxEnergy { get; set; }
         public int DefensePercent { get; set; }

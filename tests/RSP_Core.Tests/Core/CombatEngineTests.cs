@@ -16,20 +16,20 @@ namespace RSP_Core.Tests.Core
             };
 
             // Setup player
-            initData.InitialPlayerState.HP = 100;
-            initData.InitialPlayerState.MaxHP = 100;
-            initData.InitialPlayerState.Energy = 10;
-            initData.InitialPlayerState.MaxEnergy = 10;
+            initData.PlayerState.Hp = 100;
+            initData.PlayerState.MaxHp = 100;
+            initData.PlayerState.Energy = 10;
+            initData.PlayerState.MaxEnergy = 10;
 
             // Add player cards
             for (int i = 0; i < 10; i++)
             {
                 var cardDef = new CardDefinition
                 {
-                    CardId = $"player_card_{i}",
+                    Id = $"player_card_{i}",
                     Name = $"Card {i}",
-                    SymbolType = (SymbolType)(i % 3),
-                    CardRole = CardRole.Attack,
+                    Symbol = (SymbolType)(i % 3),
+                    Role = CardRole.Attack,
                     Cost = 2,
                     BaseValue = 10,
                     WinBonusValue = 5
@@ -37,19 +37,19 @@ namespace RSP_Core.Tests.Core
                 cardDef.BaseEffects.Add(new EffectRef("attack_damage", 10));
                 cardDef.WinEffects.Add(new EffectRef("attack_bonus_damage", 5));
 
-                initData.InitialPlayerState.Deck.Add(new CardInstance($"inst_{i}", cardDef));
+                initData.PlayerState.Deck.Add(new CardInstance($"inst_{i}", cardDef));
             }
 
             // Setup enemy
-            initData.InitialEnemyState.HP = 80;
-            initData.InitialEnemyState.MaxHP = 80;
-            initData.InitialEnemyState.AttackValue = 8;
+            initData.EnemyState.Hp = 80;
+            initData.EnemyState.MaxHp = 80;
+            initData.EnemyState.AttackValue = 8;
 
             // Add enemy cards
             for (int i = 0; i < 5; i++)
             {
                 var enemyCard = new EnemyCard($"enemy_{i}", (SymbolType)(i % 3), 10);
-                initData.InitialEnemyState.Deck.Add(enemyCard);
+                initData.EnemyState.Deck.Add(enemyCard);
             }
 
             return initData;
@@ -68,10 +68,9 @@ namespace RSP_Core.Tests.Core
 
             // Assert
             Assert.Equal(1, snapshot.TurnNumber);
-            Assert.Equal(0, snapshot.SlotIndex);
             Assert.Equal(5, snapshot.Player.Hand.Count);
             Assert.Equal(5, snapshot.Player.Deck.Count);
-            Assert.Equal(100, snapshot.Player.HP);
+            Assert.Equal(100, snapshot.Player.Hp);
             Assert.Equal(10, snapshot.Player.Energy);
         }
 
@@ -85,31 +84,31 @@ namespace RSP_Core.Tests.Core
             // Force matchup: Square vs Triangle = Win
             var playerCard = new CardInstance("test", new CardDefinition
             {
-                SymbolType = SymbolType.Square,
+                Symbol = SymbolType.Square,
                 Cost = 2,
                 BaseValue = 10
             });
             playerCard.Definition.BaseEffects.Add(new EffectRef("attack_damage", 10));
             playerCard.Definition.WinEffects.Add(new EffectRef("attack_bonus_damage", 5));
 
-            initData.InitialPlayerState.Deck.Clear();
-            initData.InitialPlayerState.Deck.Add(playerCard);
-            initData.InitialEnemyState.Deck.Clear();
-            initData.InitialEnemyState.Deck.Add(new EnemyCard("e1", SymbolType.Triangle, 10));
+            initData.PlayerState.Deck.Clear();
+            initData.PlayerState.Deck.Add(playerCard);
+            initData.EnemyState.Deck.Clear();
+            initData.EnemyState.Deck.Add(new EnemyCard("e1", SymbolType.Triangle, 10));
 
             engine.Initialize(initData);
 
             var snapshot = engine.GetSnapshot();
-            int initialPlayerHP = snapshot.Player.HP;
+            int initialPlayerHP = snapshot.Player.Hp;
 
             // Act
             var result = engine.ResolveCard(new ResolveRequest(playerCard.InstanceId, 0));
 
             // Assert
             Assert.Equal(CombatOutcome.Win, result.Outcome);
-            Assert.Equal(15, result.DamageDealt); // 10 base + 5 win bonus
-            Assert.Equal(0, result.DamageTaken); // Enemy negated
-            Assert.Equal(initialPlayerHP, result.Snapshot.Player.HP);
+            Assert.Equal(15, result.DamageDealtToEnemy); // 10 base + 5 win bonus
+            Assert.Equal(0, result.DamageDealtToPlayer); // Enemy negated
+            Assert.Equal(initialPlayerHP, result.Snapshot.Player.Hp);
             Assert.Contains("EnemyNegated", result.EventTags);
         }
 
@@ -123,32 +122,32 @@ namespace RSP_Core.Tests.Core
             // Force matchup: Square vs Square = Draw
             var playerCard = new CardInstance("test", new CardDefinition
             {
-                SymbolType = SymbolType.Square,
+                Symbol = SymbolType.Square,
                 Cost = 2,
                 BaseValue = 10
             });
             playerCard.Definition.BaseEffects.Add(new EffectRef("attack_damage", 10));
 
-            initData.InitialPlayerState.Deck.Clear();
-            initData.InitialPlayerState.Deck.Add(playerCard);
-            initData.InitialEnemyState.Deck.Clear();
-            initData.InitialEnemyState.Deck.Add(new EnemyCard("e1", SymbolType.Square, 10));
+            initData.PlayerState.Deck.Clear();
+            initData.PlayerState.Deck.Add(playerCard);
+            initData.EnemyState.Deck.Clear();
+            initData.EnemyState.Deck.Add(new EnemyCard("e1", SymbolType.Square, 10));
 
             engine.Initialize(initData);
 
             var snapshot = engine.GetSnapshot();
-            int initialPlayerHP = snapshot.Player.HP;
-            int initialEnemyHP = snapshot.Enemy.HP;
+            int initialPlayerHP = snapshot.Player.Hp;
+            int initialEnemyHP = snapshot.Enemy.Hp;
 
             // Act
             var result = engine.ResolveCard(new ResolveRequest(playerCard.InstanceId, 0));
 
             // Assert
             Assert.Equal(CombatOutcome.Draw, result.Outcome);
-            Assert.Equal(10, result.DamageDealt);
-            Assert.Equal(10, result.DamageTaken);
-            Assert.Equal(initialPlayerHP - 10, result.Snapshot.Player.HP);
-            Assert.Equal(initialEnemyHP - 10, result.Snapshot.Enemy.HP);
+            Assert.Equal(10, result.DamageDealtToEnemy);
+            Assert.Equal(10, result.DamageDealtToPlayer);
+            Assert.Equal(initialPlayerHP - 10, result.Snapshot.Player.Hp);
+            Assert.Equal(initialEnemyHP - 10, result.Snapshot.Enemy.Hp);
             Assert.Contains("EnemyAttacked", result.EventTags);
         }
 
@@ -162,32 +161,32 @@ namespace RSP_Core.Tests.Core
             // Force matchup: Square vs Circle = Lose
             var playerCard = new CardInstance("test", new CardDefinition
             {
-                SymbolType = SymbolType.Square,
+                Symbol = SymbolType.Square,
                 Cost = 2,
                 BaseValue = 10
             });
             playerCard.Definition.BaseEffects.Add(new EffectRef("attack_damage", 10));
 
-            initData.InitialPlayerState.Deck.Clear();
-            initData.InitialPlayerState.Deck.Add(playerCard);
-            initData.InitialEnemyState.Deck.Clear();
-            initData.InitialEnemyState.Deck.Add(new EnemyCard("e1", SymbolType.Circle, 10));
+            initData.PlayerState.Deck.Clear();
+            initData.PlayerState.Deck.Add(playerCard);
+            initData.EnemyState.Deck.Clear();
+            initData.EnemyState.Deck.Add(new EnemyCard("e1", SymbolType.Circle, 10));
 
             engine.Initialize(initData);
 
             var snapshot = engine.GetSnapshot();
-            int initialPlayerHP = snapshot.Player.HP;
-            int initialEnemyHP = snapshot.Enemy.HP;
+            int initialPlayerHP = snapshot.Player.Hp;
+            int initialEnemyHP = snapshot.Enemy.Hp;
 
             // Act
             var result = engine.ResolveCard(new ResolveRequest(playerCard.InstanceId, 0));
 
             // Assert
             Assert.Equal(CombatOutcome.Lose, result.Outcome);
-            Assert.Equal(0, result.DamageDealt); // Player effects negated
-            Assert.Equal(10, result.DamageTaken);
-            Assert.Equal(initialPlayerHP - 10, result.Snapshot.Player.HP);
-            Assert.Equal(initialEnemyHP, result.Snapshot.Enemy.HP); // No damage to enemy
+            Assert.Equal(0, result.DamageDealtToEnemy); // Player effects negated
+            Assert.Equal(10, result.DamageDealtToPlayer);
+            Assert.Equal(initialPlayerHP - 10, result.Snapshot.Player.Hp);
+            Assert.Equal(initialEnemyHP, result.Snapshot.Enemy.Hp); // No damage to enemy
             Assert.Contains("PlayerEffectsNegated", result.EventTags);
             Assert.Contains("EnemyAttacked", result.EventTags);
         }
@@ -198,7 +197,7 @@ namespace RSP_Core.Tests.Core
             // Arrange
             var engine = new CombatEngine(new DefaultRandomSource(42));
             var initData = CreateTestInitData();
-            initData.InitialPlayerState.Energy = 1; // Not enough for cost 2 card
+            initData.PlayerState.Energy = 1; // Not enough for cost 2 card
 
             engine.Initialize(initData);
             var snapshot = engine.GetSnapshot();
@@ -235,7 +234,6 @@ namespace RSP_Core.Tests.Core
             Assert.Equal(10, result.Snapshot.Player.Energy); // Restored to max
             Assert.Equal(handSizeAfterPlay + 2, result.Snapshot.Player.Hand.Count); // Drew 2 cards
             Assert.Equal(2, result.Snapshot.TurnNumber);
-            Assert.Equal(0, result.Snapshot.SlotIndex);
             Assert.Contains("TurnStart", result.EventTags);
         }
 
@@ -247,9 +245,9 @@ namespace RSP_Core.Tests.Core
             var initData = CreateTestInitData();
 
             // Only add 2 enemy cards
-            initData.InitialEnemyState.Deck.Clear();
-            initData.InitialEnemyState.Deck.Add(new EnemyCard("e1", SymbolType.Square, 5));
-            initData.InitialEnemyState.Deck.Add(new EnemyCard("e2", SymbolType.Triangle, 5));
+            initData.EnemyState.Deck.Clear();
+            initData.EnemyState.Deck.Add(new EnemyCard("e1", SymbolType.Square, 5));
+            initData.EnemyState.Deck.Add(new EnemyCard("e2", SymbolType.Triangle, 5));
 
             engine.Initialize(initData);
 
@@ -284,28 +282,28 @@ namespace RSP_Core.Tests.Core
             // Create defense card
             var playerCard = new CardInstance("test", new CardDefinition
             {
-                SymbolType = SymbolType.Square,
+                Symbol = SymbolType.Square,
                 Cost = 2,
                 BaseValue = 50
             });
             playerCard.Definition.BaseEffects.Add(new EffectRef("defense_percent", 50)); // 50% defense
 
-            initData.InitialPlayerState.Deck.Clear();
-            initData.InitialPlayerState.Deck.Add(playerCard);
-            initData.InitialEnemyState.Deck.Clear();
-            initData.InitialEnemyState.Deck.Add(new EnemyCard("e1", SymbolType.Square, 20)); // Draw, 20 attack
+            initData.PlayerState.Deck.Clear();
+            initData.PlayerState.Deck.Add(playerCard);
+            initData.EnemyState.Deck.Clear();
+            initData.EnemyState.Deck.Add(new EnemyCard("e1", SymbolType.Square, 20)); // Draw, 20 attack
 
             engine.Initialize(initData);
 
             var snapshot = engine.GetSnapshot();
-            int initialHP = snapshot.Player.HP;
+            int initialHP = snapshot.Player.Hp;
 
             // Act
             var result = engine.ResolveCard(new ResolveRequest(playerCard.InstanceId, 0));
 
             // Assert
-            Assert.Equal(10, result.DamageTaken); // 20 * (100 - 50) / 100 = 10
-            Assert.Equal(initialHP - 10, result.Snapshot.Player.HP);
+            Assert.Equal(10, result.DamageDealtToPlayer); // 20 * (100 - 50) / 100 = 10
+            Assert.Equal(initialHP - 10, result.Snapshot.Player.Hp);
         }
     }
 }
