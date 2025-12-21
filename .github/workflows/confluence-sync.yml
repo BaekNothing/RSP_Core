@@ -56,7 +56,7 @@ token = os.environ['CONFLUENCE_API_TOKEN']
 feature_key = os.environ['FEATURE_KEY']
 page_id = os.environ['PAGE_ID']
 
-url = f"{base_url}/rest/api/content/{page_id}?expand=body.storage,version,_links,space"
+url = f"{base_url}/rest/api/content/{page_id}?expand=body.storage,version,_links"
 req = urllib.request.Request(url)
 auth_bytes = f"{user}:{token}".encode("utf-8")
 req.add_header("Authorization", "Basic " + base64.b64encode(auth_bytes).decode("utf-8"))
@@ -68,16 +68,9 @@ with urllib.request.urlopen(req) as resp:
 storage_html = data.get("body", {}).get("storage", {}).get("value", "")
 page_title = data.get("title", "Untitled")
 version_number = data.get("version", {}).get("number")
-space_key = data.get("space", {}).get("key")
 links = data.get("_links", {})
 webui = links.get("webui")
 canonical_url = f"{base_url}{webui}" if webui else None
-
-expected_space_key = "RSPCore"
-if space_key != expected_space_key:
-    raise SystemExit(
-        f"Confluence page {page_id} is in space '{space_key}', expected '{expected_space_key}'."
-    )
 
 class MinimalMarkdownParser(HTMLParser):
     def __init__(self):
@@ -114,7 +107,6 @@ meta = {
     "page_id": page_id,
     "fetched_at_utc": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
     "confluence_version": version_number,
-    "space_key": space_key,
 }
 if canonical_url:
     meta["canonical_url"] = canonical_url

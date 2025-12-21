@@ -16,7 +16,13 @@ jobs:
         run: |
           set -euo pipefail
           if [ -f global.json ]; then
-            version=$(python -c "import json; data=json.load(open('global.json','r',encoding='utf-8')); print(data.get('sdk', {}).get('version', ''))")
+            version=$(python - <<'PY'
+import json
+with open('global.json', 'r', encoding='utf-8') as f:
+    data = json.load(f)
+print(data.get('sdk', {}).get('version', ''))
+PY
+)
             if [ -z "$version" ]; then
               echo "global.json found but sdk.version missing" >&2
               exit 1

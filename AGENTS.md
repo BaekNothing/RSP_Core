@@ -5,11 +5,6 @@ These instructions apply to the entire repository.
 ## Workflow
 - Use a PR-driven workflow. Commit on a branch and open a PR.
 - Confluence is the source of truth for specifications. Do not edit `SpecsMirror/` manually.
-- The Confluence sync workflow only accepts pages from the `RSPCore` space.
-- Confluence specs and architecture docs live in the `RSPCore` space folders:
-  - `Specs` for feature specifications.
-  - `Architecture` for system design and decisions.
-  - Architecture folder example: https://baeknothing.atlassian.net/wiki/spaces/RSPCore/folder/86737290
 - If a behavior change is required, ensure there is either:
   - an updated Confluence spec, or
   - a migration doc in `Docs/Migrations/`.
