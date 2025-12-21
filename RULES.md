@@ -3,9 +3,6 @@
 ## Source of Truth
 - Confluence is the source of truth for specifications.
 - `SpecsMirror/` is generated output and must not be edited manually.
-- Confluence sync is restricted to the `RSPCore` space.
-- Specs live under the `Specs` folder in Confluence and architecture docs live under the `Architecture` folder in Confluence.
-  - Architecture folder example: https://baeknothing.atlassian.net/wiki/spaces/RSPCore/folder/86737290
 
 ## Pull Requests
 - All changes go through PRs.
