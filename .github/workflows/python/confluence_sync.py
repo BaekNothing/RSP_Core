@@ -105,18 +105,6 @@ def iter_child_page_ids(base_url: str, user: str, token: str, root_page_id: str)
     return page_ids
 
 
-def normalize_root_page_id(raw_value: str) -> str:
-    if raw_value.isdigit():
-        return raw_value
-    match = re.search(r"(\d+)", raw_value)
-    if match:
-        return match.group(1)
-    raise SystemExit(
-        "ARCH_ROOT_PAGE_ID must be a numeric Confluence page or folder ID (e.g., 86737290) "
-        "or a URL containing the ID."
-    )
-
-
 def mirror_architecture(base_url: str, user: str, token: str, root_page_id: str) -> None:
     base_dir = os.path.join("SpecsMirror", "Architecture")
     os.makedirs(base_dir, exist_ok=True)
@@ -151,7 +139,7 @@ def main() -> None:
     base_url = get_env("CONFLUENCE_BASE_URL").rstrip("/")
     user = get_env("CONFLUENCE_USER_EMAIL")
     token = get_env("CONFLUENCE_API_TOKEN")
-    root_page_id = normalize_root_page_id(get_env("ARCH_ROOT_PAGE_ID"))
+    root_page_id = get_env("ARCH_ROOT_PAGE_ID")
 
     mirror_architecture(base_url, user, token, root_page_id)
 

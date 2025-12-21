@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       architecture_root_page_id:
-        description: Confluence root page or folder ID for Architecture (numeric ID or full URL)
+        description: Confluence root page ID for Architecture
         required: true
         type: string
 
