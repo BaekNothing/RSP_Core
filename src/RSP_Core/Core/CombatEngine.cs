@@ -12,12 +12,12 @@ namespace RSP_Core.Core
     /// </summary>
     public class CombatEngine : ICombatEngine
     {
-        private BattleSnapshot currentSnapshot;
+        private BattleSnapshot currentSnapshot = null!;
         private readonly IRandomSource randomSource;
         private readonly EffectRegistry effectRegistry;
         private bool isInitialized;
 
-        public CombatEngine(IRandomSource randomSource = null, EffectRegistry effectRegistry = null)
+        public CombatEngine(IRandomSource? randomSource = null, EffectRegistry? effectRegistry = null)
         {
             this.randomSource = randomSource ?? new DefaultRandomSource();
             this.effectRegistry = effectRegistry ?? new EffectRegistry();
@@ -81,7 +81,7 @@ namespace RSP_Core.Core
                 RefillEnemyDeck();
             }
 
-            EnemyCard enemyCard = null;
+            EnemyCard? enemyCard = null;
             if (currentSnapshot.Enemy.Deck.Count > 0)
             {
                 enemyCard = currentSnapshot.Enemy.Deck[0];

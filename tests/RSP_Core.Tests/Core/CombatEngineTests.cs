@@ -262,7 +262,7 @@ namespace RSP_Core.Tests.Core
 
             // Now enemy deck should be empty and discard should have 2 cards
             snapshot = engine.GetSnapshot();
-            Assert.Equal(0, snapshot.Enemy.Deck.Count);
+            Assert.Empty(snapshot.Enemy.Deck);
             Assert.Equal(2, snapshot.Enemy.Discard.Count);
 
             // Act - play another card, should trigger refill

@@ -44,7 +44,7 @@ namespace RSP_Core.Effects
                 try
                 {
                     handler(context);
-                    errorTag = null;
+                    errorTag = string.Empty;
                     return true;
                 }
                 catch (Exception ex)

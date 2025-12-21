@@ -150,7 +150,7 @@ namespace RSP_Core.Tests.Effects
 
             // Act & Assert
             Assert.Throws<ArgumentException>(() =>
-                registry.RegisterEffect(null, ctx => { }));
+                registry.RegisterEffect(null!, ctx => { }));
         }
 
         [Fact]
@@ -172,7 +172,7 @@ namespace RSP_Core.Tests.Effects
 
             // Act & Assert
             Assert.Throws<ArgumentNullException>(() =>
-                registry.RegisterEffect("test_effect", null));
+                registry.RegisterEffect("test_effect", null!));
         }
     }
 }
