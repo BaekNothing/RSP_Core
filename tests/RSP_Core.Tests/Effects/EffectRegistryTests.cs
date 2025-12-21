@@ -13,7 +13,7 @@ namespace RSP_Core.Tests.Effects
             var registry = new EffectRegistry();
             var snapshot = new BattleSnapshot
             {
-                Enemy = new EnemyState { HP = 100, MaxHP = 100 }
+                Enemy = new EnemyState { Hp = 100, MaxHp = 100 }
             };
             var card = new CardInstance("test", new CardDefinition { BaseValue = 10 });
             var context = new EffectContext(snapshot, card) { Value = 15 };
@@ -24,7 +24,7 @@ namespace RSP_Core.Tests.Effects
             // Assert
             Assert.True(success);
             Assert.True(string.IsNullOrEmpty(error));
-            Assert.Equal(85, snapshot.Enemy.HP);
+            Assert.Equal(85, snapshot.Enemy.Hp);
         }
 
         [Fact]
@@ -106,12 +106,12 @@ namespace RSP_Core.Tests.Effects
             registry.RegisterEffect("custom_effect", ctx =>
             {
                 wasExecuted = true;
-                ctx.Snapshot.Player.HP += 10;
+                ctx.Snapshot.Player.Hp += 10;
             });
 
             var snapshot = new BattleSnapshot
             {
-                Player = new PlayerState { HP = 50 }
+                Player = new PlayerState { Hp = 50 }
             };
             var card = new CardInstance("test", new CardDefinition());
             var context = new EffectContext(snapshot, card);
@@ -122,7 +122,7 @@ namespace RSP_Core.Tests.Effects
             // Assert
             Assert.True(success);
             Assert.True(wasExecuted);
-            Assert.Equal(60, snapshot.Player.HP);
+            Assert.Equal(60, snapshot.Player.Hp);
         }
 
         [Fact]
@@ -139,7 +139,7 @@ namespace RSP_Core.Tests.Effects
 
             // Assert
             Assert.False(success);
-            Assert.Equal("EffectNotFound:unknown_effect", error);
+            Assert.Equal("MissingEffect:unknown_effect", error);
         }
 
         [Fact]

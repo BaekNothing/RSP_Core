@@ -11,8 +11,8 @@ namespace RSP_Core.Models
         public CombatOutcome Outcome { get; set; }
         public SymbolType PlayerSymbol { get; set; }
         public SymbolType EnemySymbol { get; set; }
-        public int DamageDealt { get; set; }
-        public int DamageTaken { get; set; }
+        public int DamageDealtToEnemy { get; set; }
+        public int DamageDealtToPlayer { get; set; }
         public List<string> EventTags { get; set; }
 
         public ResolveResult()

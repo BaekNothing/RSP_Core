@@ -5,15 +5,16 @@ namespace RSP_Core.Models
     /// </summary>
     public class BattleInitData
     {
-        public PlayerState InitialPlayerState { get; set; }
-        public EnemyState InitialEnemyState { get; set; }
+        public PlayerState PlayerState { get; set; }
+        public EnemyState EnemyState { get; set; }
+        public int? Seed { get; set; }
         public int MaxSlotsPerTurn { get; set; }
         public int InitialHandSize { get; set; }
 
         public BattleInitData()
         {
-            InitialPlayerState = new PlayerState();
-            InitialEnemyState = new EnemyState();
+            PlayerState = new PlayerState();
+            EnemyState = new EnemyState();
             MaxSlotsPerTurn = 3;
             InitialHandSize = 5;
         }

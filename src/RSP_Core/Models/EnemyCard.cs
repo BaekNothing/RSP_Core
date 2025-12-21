@@ -5,15 +5,15 @@ namespace RSP_Core.Models
     /// </summary>
     public class EnemyCard
     {
-        public string CardId { get; set; }
-        public SymbolType SymbolType { get; set; }
-        public int AttackValue { get; set; }
+        public string Id { get; set; }
+        public SymbolType Symbol { get; set; }
+        public int? Power { get; set; }
 
-        public EnemyCard(string cardId, SymbolType symbolType, int attackValue)
+        public EnemyCard(string id, SymbolType symbol, int? power = null)
         {
-            CardId = cardId;
-            SymbolType = symbolType;
-            AttackValue = attackValue;
+            Id = id;
+            Symbol = symbol;
+            Power = power;
         }
     }
 }

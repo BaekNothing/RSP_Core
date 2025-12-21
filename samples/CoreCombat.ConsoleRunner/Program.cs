@@ -17,6 +17,7 @@ namespace CoreCombat.ConsoleRunner
             // Initialize battle
             var initData = CreateBattleInitData();
             engine.Initialize(initData);
+            var maxSlotsPerTurn = initData.MaxSlotsPerTurn;
 
             Console.WriteLine("Battle initialized!");
             PrintSnapshot(engine.GetSnapshot());
@@ -26,10 +27,11 @@ namespace CoreCombat.ConsoleRunner
             {
                 Console.WriteLine($"\n=== TURN {turn} ===");
                 var snapshot = engine.GetSnapshot();
+                int slotIndex = 0;
 
                 // Play cards in available slots
                 int cardsPlayed = 0;
-                while (snapshot.SlotIndex < snapshot.MaxSlotsPerTurn && snapshot.Player.Hand.Count > 0)
+                while (slotIndex < maxSlotsPerTurn && snapshot.Player.Hand.Count > 0)
                 {
                     var card = snapshot.Player.Hand.FirstOrDefault(c =>
                         c.Definition.Cost <= snapshot.Player.Energy);
@@ -40,42 +42,44 @@ namespace CoreCombat.ConsoleRunner
                         break;
                     }
 
-                    Console.WriteLine($"\nSlot {snapshot.SlotIndex + 1}:");
-                    Console.WriteLine($"Playing: {card.Definition.Name} ({card.Definition.SymbolType})");
+                    Console.WriteLine($"\nSlot {slotIndex + 1}:");
+                    Console.WriteLine($"Playing: {card.Definition.Name} ({card.Definition.Symbol})");
                     Console.WriteLine($"Cost: {card.Definition.Cost} | Energy: {snapshot.Player.Energy}");
 
-                    var result = engine.ResolveCard(new ResolveRequest(card.InstanceId, snapshot.SlotIndex));
+                    var result = engine.ResolveCard(new ResolveRequest(card.InstanceId, slotIndex));
 
                     Console.WriteLine($"Enemy plays: {result.EnemySymbol}");
                     Console.WriteLine($"Result: {result.Outcome}!");
-                    Console.WriteLine($"Damage dealt: {result.DamageDealt} | Damage taken: {result.DamageTaken}");
+                    Console.WriteLine($"Damage dealt: {result.DamageDealtToEnemy} | Damage taken: {result.DamageDealtToPlayer}");
 
                     if (result.EventTags.Count > 0)
                     {
                         Console.WriteLine($"Events: {string.Join(", ", result.EventTags)}");
                     }
 
-                    Console.WriteLine($"Player HP: {result.Snapshot.Player.HP}/{result.Snapshot.Player.MaxHP}");
-                    Console.WriteLine($"Enemy HP: {result.Snapshot.Enemy.HP}/{result.Snapshot.Enemy.MaxHP}");
+                    Console.WriteLine($"Player HP: {result.Snapshot.Player.Hp}/{result.Snapshot.Player.MaxHp}");
+                    Console.WriteLine($"Enemy HP: {result.Snapshot.Enemy.Hp}/{result.Snapshot.Enemy.MaxHp}");
 
                     snapshot = result.Snapshot;
                     cardsPlayed++;
 
                     // Check if battle ended
-                    if (snapshot.Player.HP <= 0 || snapshot.Enemy.HP <= 0)
+                    if (snapshot.IsBattleEnded)
                     {
                         break;
                     }
+
+                    slotIndex++;
                 }
 
                 snapshot = engine.GetSnapshot();
-                if (snapshot.Player.HP <= 0)
+                if (snapshot.IsPlayerDead)
                 {
                     Console.WriteLine("\n=== DEFEAT ===");
                     Console.WriteLine("Player was defeated!");
                     break;
                 }
-                else if (snapshot.Enemy.HP <= 0)
+                else if (snapshot.IsEnemyDead)
                 {
                     Console.WriteLine("\n=== VICTORY ===");
                     Console.WriteLine("Enemy was defeated!");
@@ -103,10 +107,10 @@ namespace CoreCombat.ConsoleRunner
             };
 
             // Setup player
-            initData.InitialPlayerState.HP = 100;
-            initData.InitialPlayerState.MaxHP = 100;
-            initData.InitialPlayerState.Energy = 10;
-            initData.InitialPlayerState.MaxEnergy = 10;
+            initData.PlayerState.Hp = 100;
+            initData.PlayerState.MaxHp = 100;
+            initData.PlayerState.Energy = 10;
+            initData.PlayerState.MaxEnergy = 10;
 
             // Create diverse card set
             AddPlayerCard(initData, "Strike", SymbolType.Square, CardRole.Attack, 2, 12,
@@ -146,16 +150,16 @@ namespace CoreCombat.ConsoleRunner
             }
 
             // Setup enemy
-            initData.InitialEnemyState.HP = 80;
-            initData.InitialEnemyState.MaxHP = 80;
-            initData.InitialEnemyState.AttackValue = 10;
+            initData.EnemyState.Hp = 80;
+            initData.EnemyState.MaxHp = 80;
+            initData.EnemyState.AttackValue = 10;
 
             // Add enemy cards with varied symbols
-            initData.InitialEnemyState.Deck.Add(new EnemyCard("enemy_1", SymbolType.Square, 12));
-            initData.InitialEnemyState.Deck.Add(new EnemyCard("enemy_2", SymbolType.Triangle, 10));
-            initData.InitialEnemyState.Deck.Add(new EnemyCard("enemy_3", SymbolType.Circle, 11));
-            initData.InitialEnemyState.Deck.Add(new EnemyCard("enemy_4", SymbolType.Square, 13));
-            initData.InitialEnemyState.Deck.Add(new EnemyCard("enemy_5", SymbolType.Triangle, 9));
+            initData.EnemyState.Deck.Add(new EnemyCard("enemy_1", SymbolType.Square, 12));
+            initData.EnemyState.Deck.Add(new EnemyCard("enemy_2", SymbolType.Triangle, 10));
+            initData.EnemyState.Deck.Add(new EnemyCard("enemy_3", SymbolType.Circle, 11));
+            initData.EnemyState.Deck.Add(new EnemyCard("enemy_4", SymbolType.Square, 13));
+            initData.EnemyState.Deck.Add(new EnemyCard("enemy_5", SymbolType.Triangle, 9));
 
             return initData;
         }
@@ -167,10 +171,10 @@ namespace CoreCombat.ConsoleRunner
         {
             var cardDef = new CardDefinition
             {
-                CardId = $"{name.ToLower().Replace(" ", "_")}_{initData.InitialPlayerState.Deck.Count}",
+                Id = $"{name.ToLower().Replace(" ", "_")}_{initData.PlayerState.Deck.Count}",
                 Name = name,
-                SymbolType = symbol,
-                CardRole = role,
+                Symbol = symbol,
+                Role = role,
                 Cost = cost,
                 BaseValue = baseValue,
                 WinBonusValue = 0
@@ -186,16 +190,16 @@ namespace CoreCombat.ConsoleRunner
                 cardDef.WinEffects.Add(new EffectRef(effectId, value));
             }
 
-            initData.InitialPlayerState.Deck.Add(
-                new CardInstance($"inst_{initData.InitialPlayerState.Deck.Count}", cardDef)
+            initData.PlayerState.Deck.Add(
+                new CardInstance($"inst_{initData.PlayerState.Deck.Count}", cardDef)
             );
         }
 
         static void PrintSnapshot(BattleSnapshot snapshot)
         {
-            Console.WriteLine($"Turn: {snapshot.TurnNumber} | Slot: {snapshot.SlotIndex}/{snapshot.MaxSlotsPerTurn}");
-            Console.WriteLine($"Player: {snapshot.Player.HP}/{snapshot.Player.MaxHP} HP | {snapshot.Player.Energy} Energy");
-            Console.WriteLine($"Enemy: {snapshot.Enemy.HP}/{snapshot.Enemy.MaxHP} HP");
+            Console.WriteLine($"Turn: {snapshot.TurnNumber}");
+            Console.WriteLine($"Player: {snapshot.Player.Hp}/{snapshot.Player.MaxHp} HP | {snapshot.Player.Energy} Energy");
+            Console.WriteLine($"Enemy: {snapshot.Enemy.Hp}/{snapshot.Enemy.MaxHp} HP");
             Console.WriteLine($"Hand: {snapshot.Player.Hand.Count} cards | Deck: {snapshot.Player.Deck.Count} cards");
         }
     }
